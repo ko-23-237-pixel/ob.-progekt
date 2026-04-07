@@ -1,75 +1,149 @@
-<script>
-  // === Настройка Supabase (замени на свои ключи) ===
-  const supabaseUrl = 'https:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZHF0cGJtZGNkaGNvdWNybXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDQzNDEsImV4cCI6MjA5MTEyMDM0MX0.NflJc482zspIQaLmS0Q2cGiMl2XaytlctTN3uhSCDSQ';
-  const supabaseAnonKey = 'sb_publishable_dJEWPhHoUQjzcgBT3Q6YBQ_skil4W3Z';
-
-  const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-  // ID текущего пользователя (можно получить через supabase.auth.getUser())
-  let MY_ID = null;
-
-  // Функция загрузки всех пользователей для "Монитор группы"
-  async function fetchGroup() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('username', { ascending: true });
-
-    if (error) {
-      console.error('Ошибка при загрузке группы:', error);
-      return;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой профиль - Supabase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { background-color: #f8fafc; }
+    .status-btn {
+      transition: all 0.2s ease;
     }
+    .status-btn.active {
+      ring: 4px;
+      ring-offset: 2px;
+      box-shadow: 0 0 0 4px rgb(59 130 246 / 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8">
 
-    const list = document.getElementById('grouplist');
-    if (!list) return;
+  <div class="max-w-md mx-auto px-4 space-y-6">
 
-    list.innerHTML = data.map(user => `
-      <div class="flex items-center gap-3 py-2">
-        <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
-        <div>
-          <p class="font-medium">${user.username}</p>
-          <p class="text-gray-500 text-sm">${user.status || 'Статус не задан'}</p>
-        </div>
+    <!-- Мой профиль -->
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+      <h2 class="text-2xl font-semibold mb-1">Мой профиль</h2>
+      <p id="myInfo" class="text-gray-600 mb-6">Вы зашли как: Загрузка...</p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="updateStatus(this, 'Учусь')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-green-500 hover:bg-green-600">
+          <span class="text-2xl">📚</span>
+          Учусь
+        </button>
+        
+        <button onclick="updateStatus(this, 'Кофе')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-yellow-500 hover:bg-yellow-600">
+          <span class="text-2xl">☕</span>
+          Кофе
+        </button>
+        
+        <button onclick="updateStatus(this, 'В игре')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-blue-500 hover:bg-blue-600">
+          <span class="text-2xl">🎮</span>
+          В игре
+        </button>
+        
+        <button onclick="updateStatus(this, 'Дома')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-gray-500 hover:bg-gray-600">
+          <span class="text-2xl">🏠</span>
+          Дома
+        </button>
       </div>
-    `).join('');
-  }
+    </div>
 
-  // Функция загрузки информации о текущем пользователе
-  async function fetchMyInfo() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log('Пользователь не авторизован');
-      return;
+    <!-- Монитор группы -->
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+      <h3 class="font-semibold text-xl mb-4">Монитор группы</h3>
+      <div id="grouplist" class="space-y-3">
+        <!-- Список будет загружаться через JavaScript -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==================== ЗДЕСЬ ВСТАВЛЯЙ СВОИ КЛЮЧИ ====================
+    const supabaseUrl = 'https:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZHF0cGJtZGNkaGNvdWNybXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDQzNDEsImV4cCI6MjA5MTEyMDM0MX0.NflJc482zspIQaLmS0Q2cGiMl2XaytlctTN3uhSCDSQ';
+  const supabaseAnonKey = 'sb_publishable_dJEWPhHoUQjzcgBT3Q6YBQ_skil4W3Z';
+    const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+    let currentUserId = null;
+
+    // Обновление статуса
+    async function updateStatus(btn, newStatus) {
+      // Убираем active у всех кнопок
+      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+      // Добавляем active текущей
+      btn.classList.add('active');
+
+      if (!currentUserId) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUserId);
+
+      if (error) console.error('Ошибка обновления статуса:', error);
     }
 
-    MY_ID = user.id;
+    // Загрузка информации о себе
+    async function fetchMyInfo() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        document.getElementById('myInfo').innerText = 'Вы не авторизованы';
+        return;
+      }
 
-    const { data: me, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+      currentUserId = user.id;
 
-    if (error || !me) {
-      console.error('Ошибка при загрузке своего профиля:', error);
-      return;
+      const { data: me } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      const myInfoEl = document.getElementById('myInfo');
+      if (myInfoEl && me) {
+        myInfoEl.innerText = `Вы зашли как: ${me.username || 'Пользователь'}`;
+      }
     }
 
-    const myInfoEl = document.getElementById('myInfo');
-    if (myInfoEl) {
-      myInfoEl.innerText = `Вы зашли как: ${me.username || 'Пользователь'}`;
+    // Загрузка списка группы
+    async function fetchGroup() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('username', { ascending: true });
+
+      if (error) {
+        console.error('Ошибка загрузки группы:', error);
+        return;
+      }
+
+      const list = document.getElementById('grouplist');
+      list.innerHTML = data.map(user => `
+        <div class="flex items-center gap-3 py-2">
+          <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+          <div>
+            <p class="font-medium">${user.username || 'Без имени'}</p>
+            <p class="text-gray-500 text-sm">${user.status || 'Статус не задан'}</p>
+          </div>
+        </div>
+      `).join('');
     }
-  }
 
-  // Запуск всего при загрузке страницы
-  async function init() {
-    await fetchMyInfo();
-    await fetchGroup();
+    // Инициализация
+    async function init() {
+      await fetchMyInfo();
+      await fetchGroup();
+      setInterval(fetchGroup, 5000); // обновление каждые 5 секунд
+    }
 
-    // Обновляем список группы каждые 5 секунд
-    setInterval(fetchGroup, 5000);
-  }
+    window.onload = init;
+  </script>
 
-  // Запускаем
-  window.onload = init;
-</script>
+</body>
+</html>
