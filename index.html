@@ -142,6 +142,25 @@
       setInterval(fetchGroup, 5000); // обновление каждые 5 секунд
     }
 
+    import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+// Кнопка "Войти через Google"
+async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'https://твой-сайт.com/auth/callback'   // или http://localhost:3000/auth/callback
+    }
+  })
+
+  if (error) console.error(error)
+}
+
     window.onload = init;
   </script>
 
