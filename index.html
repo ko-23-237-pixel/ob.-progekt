@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Мой профиль - Supabase</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <style>
     body { background-color: #f8fafc; }
     .status-btn {
@@ -19,150 +20,129 @@
     }
   </style>
 </head>
-<body class="min-h-screen py-8">
 
+<body class="min-h-screen py-8">
   <div class="max-w-md mx-auto px-4 space-y-6">
 
-    <!-- Мой профиль -->
+    <!-- Кнопка входа -->
+    <button onclick="signInWithGoogle()"
+      class="w-full bg-red-500 text-white py-3 rounded-xl">
+      Войти через Google
+    </button>
+
+    <!-- Профиль -->
     <div class="bg-white rounded-3xl shadow-lg p-6">
       <h2 class="text-2xl font-semibold mb-1">Мой профиль</h2>
-      <p id="myInfo" class="text-gray-600 mb-6">Вы зашли как: Загрузка...</p>
+      <p id="myInfo" class="text-gray-600 mb-6">Загрузка...</p>
 
       <div class="grid grid-cols-2 gap-3">
-        <button onclick="updateStatus(this, 'Учусь')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-green-500 hover:bg-green-600">
-          <span class="text-2xl">📚</span>
-          Учусь
-        </button>
-        
-        <button onclick="updateStatus(this, 'Кофе')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-yellow-500 hover:bg-yellow-600">
-          <span class="text-2xl">☕</span>
-          Кофе
-        </button>
-        
-        <button onclick="updateStatus(this, 'В игре')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-blue-500 hover:bg-blue-600">
-          <span class="text-2xl">🎮</span>
-          В игре
-        </button>
-        
-        <button onclick="updateStatus(this, 'Дома')" class="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-gray-500 hover:bg-gray-600">
-          <span class="text-2xl">🏠</span>
-          Дома
-        </button>
+        <button onclick="updateStatus(this, 'Учусь')" class="status-btn bg-green-500 text-white py-4 rounded-2xl">📚 Учусь</button>
+        <button onclick="updateStatus(this, 'Кофе')" class="status-btn bg-yellow-500 text-white py-4 rounded-2xl">☕ Кофе</button>
+        <button onclick="updateStatus(this, 'В игре')" class="status-btn bg-blue-500 text-white py-4 rounded-2xl">🎮 В игре</button>
+        <button onclick="updateStatus(this, 'Дома')" class="status-btn bg-gray-500 text-white py-4 rounded-2xl">🏠 Дома</button>
       </div>
     </div>
 
-    <!-- Монитор группы -->
+    <!-- Группа -->
     <div class="bg-white rounded-3xl shadow-lg p-6">
-      <h3 class="font-semibold text-xl mb-4">Монитор группы</h3>
-      <div id="grouplist" class="space-y-3">
-        <!-- Список будет загружаться через JavaScript -->
-      </div>
+      <h3 class="text-xl font-semibold mb-4">Монитор группы</h3>
+      <div id="grouplist"></div>
     </div>
 
   </div>
 
-  <script>
-    // ==================== ЗДЕСЬ ВСТАВЛЯЙ СВОИ КЛЮЧИ ====================
-    const supabaseUrl = 'https:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZHF0cGJtZGNkaGNvdWNybXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDQzNDEsImV4cCI6MjA5MTEyMDM0MX0.NflJc482zspIQaLmS0Q2cGiMl2XaytlctTN3uhSCDSQ';
-  const supabaseAnonKey = 'sb_publishable_dJEWPhHoUQjzcgBT3Q6YBQ_skil4W3Z';
-    const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+<script>
+  // 🔑 ВСТАВЬ СВОИ ДАННЫЕ
+  const supabaseUrl = 'https://YOUR_PROJECT_URL.supabase.co';
+  const supabaseAnonKey = 'YOUR_ANON_KEY';
 
-    let currentUserId = null;
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-    // Обновление статуса
-    async function updateStatus(btn, newStatus) {
-      // Убираем active у всех кнопок
-      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-      // Добавляем active текущей
-      btn.classList.add('active');
+  let currentUserId = null;
 
-      if (!currentUserId) return;
+  // ===== GOOGLE LOGIN =====
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUserId);
+    if (error) console.error(error);
+  }
 
-      if (error) console.error('Ошибка обновления статуса:', error);
+  // ===== СТАТУС =====
+  async function updateStatus(btn, newStatus) {
+    document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (!currentUserId) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', currentUserId);
+
+    if (error) console.error(error);
+  }
+
+  // ===== МОЙ ПРОФИЛЬ =====
+  async function fetchMyInfo() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      document.getElementById('myInfo').innerText = 'Вы не авторизованы';
+      return;
     }
 
-    // Загрузка информации о себе
-    async function fetchMyInfo() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        document.getElementById('myInfo').innerText = 'Вы не авторизованы';
-        return;
-      }
+    currentUserId = user.id;
 
-      currentUserId = user.id;
+    const { data } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single();
 
-      const { data: me } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single();
+    document.getElementById('myInfo').innerText =
+      `Вы зашли как: ${data?.username || 'Пользователь'}`;
+  }
 
-      const myInfoEl = document.getElementById('myInfo');
-      if (myInfoEl && me) {
-        myInfoEl.innerText = `Вы зашли как: ${me.username || 'Пользователь'}`;
-      }
+  // ===== ГРУППА =====
+  async function fetchGroup() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('username');
+
+    if (error) {
+      console.error(error);
+      return;
     }
 
-    // Загрузка списка группы
-    async function fetchGroup() {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('username', { ascending: true });
-
-      if (error) {
-        console.error('Ошибка загрузки группы:', error);
-        return;
-      }
-
-      const list = document.getElementById('grouplist');
-      list.innerHTML = data.map(user => `
-        <div class="flex items-center gap-3 py-2">
-          <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
-          <div>
-            <p class="font-medium">${user.username || 'Без имени'}</p>
-            <p class="text-gray-500 text-sm">${user.status || 'Статус не задан'}</p>
-          </div>
+    document.getElementById('grouplist').innerHTML = data.map(user => `
+      <div class="flex gap-3 py-2">
+        <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+        <div>
+          <p>${user.username || 'Без имени'}</p>
+          <p class="text-sm text-gray-500">${user.status || 'Нет статуса'}</p>
         </div>
-      `).join('');
-    }
+      </div>
+    `).join('');
+  }
 
-    // Инициализация
-    async function init() {
-      await fetchMyInfo();
-      await fetchGroup();
-      setInterval(fetchGroup, 5000); // обновление каждые 5 секунд
-    }
+  // ===== INIT =====
+  async function init() {
+    await fetchMyInfo();
+    await fetchGroup();
+    setInterval(fetchGroup, 5000);
+  }
 
-    import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-
-// Кнопка "Войти через Google"
-async function signInWithGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: 'https://твой-сайт.com/auth/callback'   // или http://localhost:3000/auth/callback
-    }
-  })
-
-  if (error) console.error(error)
-}
-
-    window.onload = init;
-  </script>
+  window.onload = init;
+</script>
 
 </body>
 </html>
