@@ -1,7 +1,7 @@
 <script>
   // === Настройка Supabase (замени на свои ключи) ===
   const supabaseUrl = 'https://твой-проект.supabase.co';
-  const supabaseAnonKey = '82b0a22d-2370-4695-bd3d-53ac0840fbcc';
+  const supabaseAnonKey = 'sb_publishable_dJEWPhHoUQjzcgBT3Q6YBQ_skil4W3Z';
 
   const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 
@@ -12,64 +12,64 @@
   async function fetchGroup() {
     const { data, error } = await supabase
       .from('profiles')
-      .выбирать('*')
-      .заказ('имя пользователя', { восходящий: истинный });
+      .select('*')
+      .order('username', { ascending: true });
 
-    если (ошибка) {
-      консоль.ошибка('Ошибка при загрузке группы:', ошибка);
-      возвращаться;
+    if (error) {
+      console.error('Ошибка при загрузке группы:', error);
+      return;
     }
 
-    константа список = документ.getElementById('групповой список');
-    если (!список) возвращаться;
+    const list = document.getElementById('grouplist');
+    if (!list) return;
 
-    список.внутреннийHTML = данные.карта(пользователь => `
+    list.innerHTML = data.map(user => `
       <div class="flex items-center gap-3 py-2">
         <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
         <div>
-          <p class="font-medium">${пользователь.имя пользователя}</p>
-          <p class="text-gray-500 text-sm">${пользователь.статус || 'Статус не задан'}</p>
+          <p class="font-medium">${user.username}</p>
+          <p class="text-gray-500 text-sm">${user.status || 'Статус не задан'}</p>
         </div>
       </div>
-    `).присоединиться('');
+    `).join('');
   }
 
   // Функция загрузки информации о текущем пользователе
-  асинхронный функция fetchMyInfo() {
-    константа { данные: { пользователь } } = ждать супабаза.аутентификация.getUser();
-    если (!пользователь) {
-      консоль.бревно('Пользователь не авторизован');
-      возвращаться;
+  async function fetchMyInfo() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('Пользователь не авторизован');
+      return;
     }
 
-    МОЙ_ID = пользователь.идентификатор;
+    MY_ID = user.id;
 
-    константа { данные: мне, ошибка } = ждать супабаза
-      .от('профили')
-      .выбирать('*')
-      .экв('ид', пользователь.идентификатор)
-      .одинокий();
+    const { data: me, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-    если (ошибка || !мне) {
-      консоль.ошибка('Ошибка при загрузке своего профиля:', ошибка);
-      возвращаться;
+    if (error || !me) {
+      console.error('Ошибка при загрузке своего профиля:', error);
+      return;
     }
 
-    константа myInfoEl = документ.getElementById('мояИнформация');
-    если (myInfoEl) {
-      myInfoEl.внутреннийТекст = `Вы зашли как: ${мне.имя пользователя || 'Пользователь'}`;
+    const myInfoEl = document.getElementById('myInfo');
+    if (myInfoEl) {
+      myInfoEl.innerText = `Вы зашли как: ${me.username || 'Пользователь'}`;
     }
   }
 
   // Запуск всего при загрузке страницы
-  асинхронный функция инициализировать() {
-    ждать fetchMyInfo();
-    ждать fetchGroup();
+  async function init() {
+    await fetchMyInfo();
+    await fetchGroup();
 
     // Обновляем список группы каждые 5 секунд
-    установитьИнтервал(fetchGroup, 5000);
+    setInterval(fetchGroup, 5000);
   }
 
   // Запускаем
-  окно.нагружать = инициализировать;
-</сценарий>
+  window.onload = init;
+</script>
