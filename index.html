@@ -10,12 +10,8 @@
 
   <style>
     body { background-color: #f8fafc; }
-    .status-btn {
-      transition: all 0.2s ease;
-    }
+    .status-btn { transition: all 0.2s ease; }
     .status-btn.active {
-      ring: 4px;
-      ring-offset: 2px;
       box-shadow: 0 0 0 4px rgb(59 130 246 / 0.3);
     }
   </style>
@@ -24,13 +20,11 @@
 <body class="min-h-screen py-8">
   <div class="max-w-md mx-auto px-4 space-y-6">
 
-    <!-- Кнопка входа -->
     <button onclick="signInWithGoogle()"
       class="w-full bg-red-500 text-white py-3 rounded-xl">
       Войти через Google
     </button>
 
-    <!-- Профиль -->
     <div class="bg-white rounded-3xl shadow-lg p-6">
       <h2 class="text-2xl font-semibold mb-1">Мой профиль</h2>
       <p id="myInfo" class="text-gray-600 mb-6">Загрузка...</p>
@@ -43,7 +37,6 @@
       </div>
     </div>
 
-    <!-- Группа -->
     <div class="bg-white rounded-3xl shadow-lg p-6">
       <h3 class="text-xl font-semibold mb-4">Монитор группы</h3>
       <div id="grouplist"></div>
@@ -52,16 +45,16 @@
   </div>
 
 <script>
-  // 🔑 ВСТАВЬ СВОИ ДАННЫЕ
-  const supabaseUrl = 'http://localhost:3000';
+  const supabaseUrl = 'https://jgdqtpbmdcdhcoucrmzs.supabase.co';
   const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZHF0cGJtZGNkaGNvdWNybXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDQzNDEsImV4cCI6MjA5MTEyMDM0MX0.NflJc482zspIQaLmS0Q2cGiMl2XaytlctTN3uhSCDSQ';
 
   const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
   let currentUserId = null;
 
-  // ===== GOOGLE LOGIN =====
   async function signInWithGoogle() {
+    console.log('Кнопка нажата');
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -69,10 +62,9 @@
       }
     });
 
-    if (error) console.error(error);
+    if (error) console.error('Ошибка входа:', error);
   }
 
-  // ===== СТАТУС =====
   async function updateStatus(btn, newStatus) {
     document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -90,7 +82,6 @@
     if (error) console.error(error);
   }
 
-  // ===== МОЙ ПРОФИЛЬ =====
   async function fetchMyInfo() {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -100,6 +91,12 @@
     }
 
     currentUserId = user.id;
+
+    // создаём или обновляем пользователя
+    await supabase.from('profiles').upsert({
+      id: user.id,
+      username: user.user_metadata.full_name
+    });
 
     const { data } = await supabase
       .from('profiles')
@@ -111,7 +108,6 @@
       `Вы зашли как: ${data?.username || 'Пользователь'}`;
   }
 
-  // ===== ГРУППА =====
   async function fetchGroup() {
     const { data, error } = await supabase
       .from('profiles')
@@ -134,7 +130,6 @@
     `).join('');
   }
 
-  // ===== INIT =====
   async function init() {
     await fetchMyInfo();
     await fetchGroup();
