@@ -1,57 +1,80 @@
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой профиль - Supabase Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { background-color: #f8fafc; }
+  </style>
+</head>
+<body class="min-h-screen py-8">
 
-const URL = 'https://rncerhgizjyhobdpqn1.supabase.co';
-const KEY = 'sb_publishable_Thtf5GuBeaKf8FyndIFTg_O0lIMJ5yh';
-const supabase = createClient(URL, KEY);
+  <div class="max-w-md mx-auto px-4 space-y-6">
 
-const MY_ID = '4bc5694e-89f8-47d9-9b60-2d3bd2439122';
+    <!-- Мой профиль -->
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+      <h2 class="text-2xl font-semibold mb-1">Мой профиль</h2>
+      <p класс="текст-серый-600 мб-6">Вы зашли как: <охватывать класс="шрифт-средний текст-черный">Алмас</охватывать></p>
 
-window.changeStatus = async (text, color) => {
-    const { error } = await supabase
-    .from('profiles')
-    .update({ status: text, color: color })
-    .eq('id', MY_ID);
+      <див класс="сетка сетка-столбцы-2 зазор-3">
+        <!-- Учусь -->
+        <кнопка онклик="обновитьСтатус(этот)" класс="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl шрифт-medium текст-белый bg-green-500 hover:bg-green-600 transition-all">
+          <охватывать класс="текст-2xl">📚</охватывать>
+ Учусь
+        </кнопка>
 
-    if (error) {
-    alert("Ошибка! Проверьте RLS политики в Supabase.");
-    console.error(error);
-    } else {
-    fetchGroup();
+        <!-- Кофе -->
+        <кнопка онклик="обновитьСтатус(этот)" класс="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-all ring-4 ring-offset-2 ring-yellow-300">
+          <охватывать класс="текст-2xl">☕</охватывать>
+ Кофе
+        </кнопка>
+
+        <!-- В игре -->
+        <кнопка онклик="обновитьСтатус(этот)" класс="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl шрифт-medium текст-белый bg-blue-500 hover:bg-blue-600 transition-all">
+          <охватывать класс="текст-2xl">🎮</охватывать>
+ В игре
+        </кнопка>
+
+        <!-- Дома -->
+        <кнопка онклик="обновитьСтатус(этот)" класс="status-btn flex items-center justify-center gap-3 py-4 px-6 rounded-2xl шрифт-medium текст-белый bg-gray-500 hover:bg-gray-600 transition-all">
+          <охватывать класс="текст-2xl">🏠</охватывать>
+ Дома
+        </кнопка>
+      </див>
+    </див>
+
+    <!-- Монитор группы -->
+    <див класс="bg-белый округлый-3xl тень-lg p-6">
+      <h3 класс="шрифт-полужирный текст-xl mb-4">Монитор группы</h3>
+      
+      <див класс="гибкие элементы-центральный зазор-4">
+        <див класс="w-4 h-4 bg-yellow-400 округлый-полный анимационный-импульс"></див>
+        <див>
+          <p класс="шрифт-средний текст-lg">Алмас</p>
+          <p класс="текст-серый-500 гибкие элементы-центральный зазор-2 текстовая база">
+            <охватывать>☕</охватывать>
+ Кофе-брейк
+          </p>
+        </див>
+      </див>
+    </див>
+
+  </див>
+
+  <сценарий>
+    функция обновитьСтатус(clickedBtn) {
+      // Убираем кольцо у всѵх кнопок
+      документ.querySelectorAll('.статус-btn').дляКаждого(бтн => {
+        бтн.список классов.удалять('кольцо-4', 'кольцо-смещение-2', 'кольцо-желтое-300');
+      });
+
+      // Добавляем кольцо только на нажатую кнопку
+      clickedBtn.список классов.добавлять('кольцо-4', 'кольцо-смещение-2', 'кольцо-желтое-300');
     }
-};
+  </сценарий>
 
-async function fetchGroup() {
-    const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('username', { ascending: true });
-}
-</script>
-    .from('profiles')
-    .select('*')
-    .order('username', { ascending: true });
-
-    if (error) return console.error(error);
-
-    const list = document.getElementById('grouplist');
-    list.innerHTML = data.map(user =>
-    <div class="user-item">
-    <div class="status-dot" style="background: ${user.color || '#ccc'}"></div>
-    <div style="flex-grow: 1;">
-    <strong>${user.username}</strong><br>
-    <small style="color: #666;">${user.status || 'Статус не задан'}</small>
-    </div>
-    </div>
-    `).join('');
-
-    const me = data.find(u => u.id === MY_ID);
-    if (me) document.getElementById('myInfo').innerText = `Вы зашли как: ${me.username}`;
-    }
-
-    fetchGroup();
-
-    setInterval(fetchGroup, 5000);
-    </script>
- </body>
-</html>
+</тело>
+    </html>
