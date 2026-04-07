@@ -1,71 +1,57 @@
-<!DOCTYPE html>
-<html язык="ру">
-<голова>
-<мета набор символов="УТФ-8">
-<заголовок>Облачная практика</заголовок>
-</голова>
-<тело>
-<ч1>Проект успешно запущен в облаке!</ч1>
-<час>
-<p>Работу выполнил студент: <сильный>Митина Дарья</сильный></p>
-<p>Группа: <сильный>ПО-234</сильный></p>
-<p>Тип облака: <сильный>PaaS (страницы GitHub)</сильный></p>
-</тело>
-</html>
-<сценарий тип="модуль">
-импорт { создатьКлиент } от 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-адрес URL-адреса-адреса-адреса = 'https://rncerhgizjyhobdpqn1.supabase.co';
-константа КЛУЧ = 'sb_publishable_Thtf5GuBeaKf8FyndIFTg_O0lIMJ5yh';
-константа супабаза = создатьКлиент(URL-адрѵс-адрѵс, КЛЮЧ);
+const URL = 'https://rncerhgizjyhobdpqn1.supabase.co';
+const KEY = 'sb_publishable_Thtf5GuBeaKf8FyndIFTg_O0lIMJ5yh';
+const supabase = createClient(URL, KEY);
 
-константа МОЙ_ID = '4bc5694e-89f8-47d9-9b60-2d3bd2439122';
+const MY_ID = '4bc5694e-89f8-47d9-9b60-2d3bd2439122';
 
-окно.изменить статус = асинхронный (текст, цвет) => {
- константа { ошибка } = ждать супабаза
- .от('профили')
- .обновлять({ статус: текст, цвет: цвет })
- .экв('ид', МОЙ_ID);
+window.changeStatus = async (text, color) => {
+    const { error } = await supabase
+    .from('profiles')
+    .update({ status: text, color: color })
+    .eq('id', MY_ID);
 
- если (ошибка) {
- тревога("Ошибка! Проверка RLS политики в Supabase.");
- консоль.ошибка(ошибка);
- } еще {
- fetchGroup();
+    if (error) {
+    alert("Ошибка! Проверьте RLS политики в Supabase.");
+    console.error(error);
+    } else {
+    fetchGroup();
     }
 };
 
-асинхроный функция fetchGroup() {
- константа { данные, ошибка } = ждать супабаза
- .от('профили')
- .выбирать('*')
- .заказ('имя пользователя', { восходящий: истинный });
+async function fetchGroup() {
+    const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('username', { ascending: true });
 }
-</сценарий>
- .from('профили')
- .выбрать('*')
- .order('имя пользователя', { по возрастанию: true });
+</script>
+    .from('profiles')
+    .select('*')
+    .order('username', { ascending: true });
 
- если (ошибка) вернуть console.error(ошибка);
+    if (error) return console.error(error);
 
- const list = document.getElementById('grouplist');
+    const list = document.getElementById('grouplist');
     list.innerHTML = data.map(user =>
-    <див класс="пользовательский элемент">
-    <див класс="статус-точка" стиль="фон: ${пользователь.цвет || '#ccc'}"></див>
-    <див стиль="гибко-расти: 1;">
-    <сильный>${пользователь.имя пользователя}</сильный><бр>
-    <маленький стиль="цвет: #666;">${user.status || 'Статус не задан'}</маленький>
-    </див>
-    </див>
- `).join('');
+    <div class="user-item">
+    <div class="status-dot" style="background: ${user.color || '#ccc'}"></div>
+    <div style="flex-grow: 1;">
+    <strong>${user.username}</strong><br>
+    <small style="color: #666;">${user.status || 'Статус не задан'}</small>
+    </div>
+    </div>
+    `).join('');
 
     const me = data.find(u => u.id === MY_ID);
- if (me) document.getElementById('myInfo').innerText = `Вы зашли как: ${me.username}`;
+    if (me) document.getElementById('myInfo').innerText = `Вы зашли как: ${me.username}`;
     }
 
- fetchGroup();
+    fetchGroup();
 
- setInterval(fetchGroup, 5000);
-    </сценарий>
- </тело>
+    setInterval(fetchGroup, 5000);
+    </script>
+ </body>
 </html>
